@@ -1,329 +1,265 @@
-🛡️ Virtual SOC Lab
+# Virtual SOC Lab
+## Suricata IDS Integrated with Elastic SIEM Stack
 
-Suricata IDS Integrated with Elastic SIEM Stack
+## Project Summary
+This project demonstrates the design, deployment, and validation of a Virtual Security Operations Centre (SOC) lab using open-source security tools.
 
-Project Summary
+The lab objective was to:
+- Deploy a Network Intrusion Detection System (Suricata)
+- Integrate it with a SIEM platform (Elastic Stack)
+- Simulate reconnaissance attacks
+- Detect, forward, and visualize security alerts
+- Validate an end-to-end threat detection workflow
 
-This project demonstrates the design, deployment, and validation of a Virtual Security Operations Centre (SOC) lab environment using open-source security tools.
+The lab successfully detects reconnaissance scans (for example, Nmap SYN scans) and visualizes alerts in Kibana.
 
-The objective was to:
+## Objectives
+- Configure a secure virtual network environment
+- Deploy Suricata as a network IDS
+- Enable and manage threat detection rules
+- Simulate attack traffic from an attacker VM
+- Forward IDS logs to Elasticsearch using Filebeat
+- Visualize and analyze alerts in Kibana
+- Validate real-time detection capability
 
-Deploy a Network Intrusion Detection System (Suricata)
+## Lab Architecture
+### Architecture Overview
+1. Attacker VM generates malicious or test network traffic.
+2. Suricata IDS server monitors traffic and writes alerts/logs.
+3. Filebeat collects Suricata logs and ships them to Elasticsearch.
+4. Elasticsearch indexes and stores security events.
+5. Kibana visualizes events for investigation and monitoring.
 
-Integrate it with a SIEM platform (Elastic Stack)
+![Lab architecture](docs/doc-images/image1.png)
 
-Simulate reconnaissance attacks
+## Components
+### Attacker Machine
+- OS: Ubuntu 24.04
+- Tool: Nmap
+- Role: Simulate reconnaissance attacks
 
-Detect, forward, and visualize security alerts
+### IDS Server
+- OS: Ubuntu 24.04
+- Suricata
+- Elasticsearch 8.x
+- Kibana 8.x
+- Filebeat
 
-Validate end-to-end threat detection workflow
+## Environment Setup
+### Virtualization Platform
+- Oracle VirtualBox
+- Host-Only Networking mode
+- Network range: `192.168.56.0/24`
 
-The lab successfully detects reconnaissance scans (Example. Nmap SYN scans) and visualizes alerts within Kibana.
+### Machine Configuration
+#### IDS Server
+- RAM: 15 GB
+- OS: Ubuntu 24.04 LTS
+- Monitored interface: `enp0s8`
 
-Objectives
+![IDS server setup](docs/doc-images/image2.png)
 
-The primary objectives of this lab were:
+#### Attacker VM
+- RAM: 10 GB
+- OS: Ubuntu 24.04 LTS
 
-Configure a secure virtual network environment.
+![Attacker VM setup](docs/doc-images/image3.png)
 
-Deploy Suricata as a network IDS.
+## Network Configuration
+### Adapter Configuration
+- Adapter 1: Host-Only Adapter (Promiscuous Mode enabled)
+- Adapter 2: NAT (internet access for package downloads)
 
-Enable and manage threat detection rules.
+### Assigned IP Addresses
+- IDS Server: `192.168.56.103`
+- Attacker VM: `192.168.56.102`
 
-Simulate attack traffic from an attacker VM.
+### Connectivity Verification
+```bash
+ping 192.168.56.103
+tcpdump -i enp0s8
+```
 
-Forward IDS logs to Elasticsearch using Filebeat.
+## Suricata Deployment
+### Installation
+```bash
+sudo apt update
+sudo apt install suricata -y
+```
 
-Visualize and analyze alerts in Kibana.
-
-Validate real-time detection capability.
-
-Lab Architecture
-
-Architecture Overview –
-
-Attacker VM: Generates malicious or test network traffic.↓Suricata IDS Server: Monitors incoming network traffic and detects suspicious activity andGenerates alert and log files based on detected threats.↓Filebeat: Collects Suricata log files andShips log data securely to Elasticsearch.↓Elasticsearch: Indexes and stores log data andEnables fast searching and analysis.↓Kibana Dashboard: Visualizes data from Elasticsearch andProvides dashboards, alerts, and security insights.
-
-![image1](docs/doc-images/image1.png)
-
-Components
-
-Attacker Machine
-
-Ubuntu 24.04
-
-Tool: Nmap
-
-Role: Simulate reconnaissance attacks
-
-IDS Server
-
-Ubuntu 24.04
-
-Suricata
-
-Elasticsearch 8.x
-
-Kibana 8.x
-
-Filebeat
-
-Environment Setup
-
-Virtualization Platform
-
-Oracle VirtualBox
-
-Host-Only Networking Mode
-
-Network Range: 192.168.56.0/24
-
-Machine Configuration
-
-IDS Server
-
-RAM: 15 GB
-
-OS: Ubuntu 24.04 LTS
-
-Interface monitored: enp0s8
-
-![image2](docs/doc-images/image2.png)
-
-Attacker VM
-
-RAM: 10 GB
-
-OS: Ubuntu 24.04 LTS
-
-![image3](docs/doc-images/image3.png)
-
-Network Configuration
-
-Adapter Configuration
-
-Adapter 1 → Host-Only Adapter (Promiscuous Mode: Enabled)
-
-Adapter 2 → NAT (Internet to Download Required Packages)
-
-Assigned IP Addresses
-
-IDS Server: 192.168.56.103Attacker VM: 192.168.56.102
-
-Connectivity verified using:
-
-ping 192.168.56.103tcpdump -i enp0s8
-
-Suricata Deployment
-
-Installation
-
-sudo apt updatesudo apt install suricata -y
-
-Rule Management
-
+### Rule Management
 Enabled Emerging Threats Open ruleset:
+```bash
+sudo suricata-update enable-source et/open
+sudo suricata-update update-sources
+sudo suricata-update
+```
 
-sudo suricata-update enable-source et/opensudo suricata-update update-sourcessudo suricata-update
+Loaded rules: ~48,000+ detection rules.
 
-Loaded Rules:~48,000+ detection rules
+### Interface Configuration
+Configured Suricata to monitor `enp0s8`.
 
-Interface Configuration
-
-Configured Suricata to monitor:
-
-enp0s8
-
-Verified configuration:
-
+Verification:
+```bash
 sudo suricata -T -c /etc/suricata/suricata.yaml -i enp0s8
+```
 
-![image4](docs/doc-images/image4.png)
+![Suricata config test](docs/doc-images/image4.png)
 
-Service Validation
-
+### Service Validation
+```bash
 sudo systemctl status suricata
+```
 
-![image5](docs/doc-images/image5.png)
+![Suricata service status](docs/doc-images/image5.png)
 
 Confirmed active and running.
 
-Attack Simulation
+## Attack Simulation
+Attack traffic generated from attacker VM:
+```bash
+nmap -sS 192.168.56.103
+nmap -A 192.168.56.103
+```
 
-Attack traffic generated from Attacker VM:
+![Nmap attack simulation](docs/doc-images/image6.png)
 
-nmap -sS 192.168.56.103nmap -A 192.168.56.103
-
-![image6](docs/doc-images/image6.png)
-
-Observed Detection:
-
-ET SCAN NMAP OS Detection Probe
-
-TCP SYN scan patterns
-
-Reconnaissance alerts
+### Observed Detection
+- ET SCAN NMAP OS Detection Probe
+- TCP SYN scan patterns
+- Reconnaissance alerts
 
 Verified alerts in:
+- `/var/log/suricata/fast.log`
+- `/var/log/suricata/eve.json`
 
-/var/log/suricata/fast.log/var/log/suricata/eve.json
+![Suricata alert logs](docs/doc-images/image7.png)
 
-![image7](docs/doc-images/image7.png)
-
-Elastic Stack Deployment
-
-Elasticsearch
-
-Configured as single-node cluster:
-
+## Elastic Stack Deployment
+### Elasticsearch
+Configured as a single-node cluster:
+```yaml
 discovery.type: single-node
+```
 
 Verified cluster status:
+```bash
+curl -k -u elastic:<password> https://localhost:9200
+```
 
-curl -k -u elastic: https://localhost:9200
+![Elasticsearch status](docs/doc-images/image8.png)
 
-![image8](docs/doc-images/image8.png)
+Cluster returned a healthy response.
 
-Cluster returned healthy response.
+### Kibana
+Connected to Elasticsearch using an enrollment token.
 
-Kibana
-
-Connected to Elasticsearch using enrollment token
-
-![image9](docs/doc-images/image9.png)
+![Kibana enrollment](docs/doc-images/image9.png)
 
 Verified access via:
-
-http://192.168.56.103:5601
+`http://192.168.56.103:5601`
 
 Created data view:
+`filebeat-*`
 
-filebeat-*
+![Kibana data view](docs/doc-images/image10.png)
+![Kibana events](docs/doc-images/image11.png)
 
-![image10](docs/doc-images/image10.png)
-
-![image11](docs/doc-images/image11.png)
-
-Filebeat Configuration
-
-Module Activation
-
+## Filebeat Configuration
+### Module Activation
+```bash
 sudo filebeat modules enable suricata
+```
 
-Enabled eve fileset: enabled: truevar.paths: ["/var/log/suricata/eve.json"]
+Enabled eve fileset:
+```yaml
+enabled: true
+var.paths: ["/var/log/suricata/eve.json"]
+```
 
-Setup
-
+### Setup
+```bash
 sudo filebeat setup
+```
 
-Service Start
+### Service Start
+```bash
+sudo systemctl enable filebeat
+sudo systemctl start filebeat
+```
 
-sudo systemctl enable filebeatsudo systemctl start filebeat
+![Filebeat service](docs/doc-images/image12.png)
 
-![image12](docs/doc-images/image12.png)
-
-Verified ingestion via:
-
+Verified ingestion:
+```bash
 sudo filebeat test output
+```
 
-![image13](docs/doc-images/image13.png)
+![Filebeat output test](docs/doc-images/image13.png)
 
-Log Flow Validation
-
+## Log Flow Validation
 Confirmed full pipeline:
+1. Nmap scan executed
+2. Suricata generated alert
+3. `eve.json` updated
+4. Filebeat forwarded log
+5. Elasticsearch indexed event
+6. Kibana displayed detection
 
-Nmap scan executed
+![Pipeline validation 1](docs/doc-images/image14.png)
+![Pipeline validation 2](docs/doc-images/image15.png)
+![Pipeline validation 3](docs/doc-images/image16.png)
 
-Suricata generated alert
+## Detection Analysis
+Example alert:
+- ET SCAN NMAP OS Detection Probe
 
-eve.json updated
+Mapped to MITRE ATT&CK:
+- T1595 - Active Scanning
+- T1046 - Network Service Scanning
 
-Filebeat forwarded log
+- Severity: Medium
+- Classification: Attempted Information Leak
 
-Elasticsearch indexed event
+![Detection analysis 1](docs/doc-images/image17.png)
+![Detection analysis 2](docs/doc-images/image18.png)
 
-Kibana displayed detection
+## Troubleshooting Performed
+Issues resolved during setup:
+- Suricata interface mismatch
+- Missing ruleset loading
+- Elasticsearch bootstrap error
+- Kibana authentication issue
+- Filebeat module misconfiguration (eve fileset disabled)
 
-![image14](docs/doc-images/image14.png)
+Diagnosis commands used:
+```bash
+systemctl status <service>
+journalctl -u <service>
+```
 
-![image15](docs/doc-images/image15.png)
+## Skills Demonstrated
+- Network configuration
+- IDS deployment and rule management
+- SIEM integration
+- Log pipeline troubleshooting
+- Threat detection validation
+- Elastic security architecture
 
-![image16](docs/doc-images/image16.png)
-
-Detection Analysis
-
-Example Alert:
-
-ET SCAN NMAP OS Detection Probe
-
-Mapped to:
-
-MITRE ATT&CKT1595 – Active ScanningT1046 – Network Service Scanning
-
-Severity: MediumClassification: Attempted Information Leak
-
-![image17](docs/doc-images/image17.png)
-
-![image18](docs/doc-images/image18.png)
-
-Troubleshooting Performed
-
-During lab setup, the following issues were resolved:
-
-Suricata interface mismatch
-
-Missing ruleset loading
-
-Elasticsearch bootstrap error
-
-Kibana authentication issue
-
-Filebeat module misconfiguration (eve fileset disabled)
-
-Each issue was diagnosed using:
-
-systemctl status
-
-journalctl logs
-
-Skills Demonstrated
-
-Network configuration
-
-IDS deployment & rule management
-
-SIEM integration
-
-Log pipeline troubleshooting
-
-Threat detection validation
-
-Elastic security architecture
-
-Outcome
-
+## Outcome
 Successfully implemented a working SOC lab capable of:
-
-Detecting reconnaissance attacks
-
-Centralizing IDS logs
-
-Visualizing security events
-
-Performing initial threat investigation
+- Detecting reconnaissance attacks
+- Centralizing IDS logs
+- Visualizing security events
+- Performing initial threat investigation
 
 This lab simulates real-world SOC infrastructure used in enterprise environments.
 
-Future Enhancements
-
-Add Zeek for network analysis
-
-Add Wazuh for host-based detection
-
-Create automated detection rules in Kibana
-
-Build custom dashboards
-
-Implement alert email notifications
-
-Deploy using Docker
+## Future Enhancements
+- Add Zeek for network analysis
+- Add Wazuh for host-based detection
+- Create automated detection rules in Kibana
+- Build custom dashboards
+- Implement alert email notifications
+- Deploy using Docker
